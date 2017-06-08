@@ -16,16 +16,16 @@
 'use strict';
 
 module.exports = function handleWidgetBody() {
-    let el = this.el;
+    var el = this.el;
 
     if (!el.hasAttribute('w-body')) {
         return;
     }
 
-    let context = this.context;
-    let builder = this.builder;
+    var context = this.context;
+    var builder = this.builder;
 
-    let widgetTagNode = this.getContainingWidgetNode();
+    var widgetTagNode = this.getContainingWidgetNode();
 
     if (!widgetTagNode) {
         this.addError('w-body can only be used within the scope of w-bind');
@@ -33,14 +33,14 @@ module.exports = function handleWidgetBody() {
     }
 
 
-    let widgetBodyExpression = el.getAttributeValue('w-body');
+    var widgetBodyExpression = el.getAttributeValue('w-body');
     el.removeAttribute('w-body');
 
     if (widgetBodyExpression) {
         var widgetIdInfo = this.assignWidgetId(true /* repeated */);
         if (!widgetIdInfo.idVarNode) {
-            let idVarNode = widgetIdInfo.createIdVarNode();
-            el.onBeforeGenerateCode((event) => {
+            var idVarNode = widgetIdInfo.createIdVarNode();
+            el.onBeforeGenerateCode(function (event) {
                 event.insertCode(idVarNode);
             });
         }
@@ -54,9 +54,9 @@ module.exports = function handleWidgetBody() {
         widgetTagNode.setAttributeValue('body', this.getNestedIdExpression());
     }
 
-    let widgetBodyVar = context.importModule('__widgetBody', this.getMarkoWidgetsRequirePath('marko-widgets/taglib/helpers/widgetBody'));
+    var widgetBodyVar = context.importModule('__widgetBody', this.getMarkoWidgetsRequirePath('marko-widgets/taglib/helpers/widgetBody'));
 
-    let widgetBodyFunctionCall = builder.functionCall(widgetBodyVar, [
+    var widgetBodyFunctionCall = builder.functionCall(widgetBodyVar, [
         builder.identifierOut(),
         this.getIdExpression(),
         widgetBodyExpression,

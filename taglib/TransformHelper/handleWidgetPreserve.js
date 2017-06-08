@@ -49,7 +49,7 @@ function addPreserve(transformHelper, bodyOnly, condition) {
     }
 
     if (idVarNode) {
-        idVarNodeTarget.onBeforeGenerateCode((event) => {
+        idVarNodeTarget.onBeforeGenerateCode(function (event) {
             event.insertCode(idVarNode);
         });
     }
@@ -64,7 +64,7 @@ module.exports = function handleWidgetPreserve() {
         el.removeAttribute('w-preserve');
         addPreserve(this, false);
     } else if (el.hasAttribute('w-preserve-if')) {
-        let preserveIfAttr = el.getAttribute('w-preserve-if');
+        var preserveIfAttr = el.getAttribute('w-preserve-if');
         var preserveIfCondition = preserveIfAttr.argument;
         if (!preserveIfCondition) {
             this.addError('The `w-preserve-if` attribute should have an argument. For example: <div w-preserve-if(someCondition)>');
@@ -76,7 +76,7 @@ module.exports = function handleWidgetPreserve() {
         el.removeAttribute('w-preserve-body');
         addPreserve(this, true);
     } else if (el.hasAttribute('w-preserve-body-if')) {
-        let preserveBodyIfAttr = el.getAttribute('w-preserve-body-if');
+        var preserveBodyIfAttr = el.getAttribute('w-preserve-body-if');
         var preserveBodyIfCondition = preserveBodyIfAttr.argument;
         if (!preserveBodyIfCondition) {
             this.addError('The `w-preserve-body-if` attribute should have an argument. For example: <div w-preserve-body-if(someCondition)>');

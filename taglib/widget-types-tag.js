@@ -7,7 +7,7 @@ module.exports = function codeGenerator(el, codegen) {
 
     var typesObject = {};
 
-    attrs.forEach((attr) => {
+    attrs.forEach(function (attr) {
         if (!attr.isLiteralString()) {
             codegen.addError('Widget type should be a string');
             return;

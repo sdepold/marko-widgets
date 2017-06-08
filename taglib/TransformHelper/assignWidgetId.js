@@ -60,7 +60,7 @@ module.exports = function assignWidgetId(isRepeated) {
     var isCustomTag = el.type !== 'HtmlElement';
 
     if (el.hasAttribute('w-id')) {
-        let widgetId = el.getAttributeValue('w-id');
+        var widgetId = el.getAttributeValue('w-id');
 
         el.removeAttribute('w-id');
 
@@ -96,7 +96,7 @@ module.exports = function assignWidgetId(isRepeated) {
         }
     } else {
         // Case 3 - We need to add a unique "id" attribute
-        let uniqueElId = this.nextUniqueId();
+        var uniqueElId = this.nextUniqueId();
 
         nestedIdExpression = isRepeated ? builder.literal(uniqueElId + '[]') : builder.literal(uniqueElId);
 
@@ -120,9 +120,9 @@ module.exports = function assignWidgetId(isRepeated) {
                 return this.idVarNode;
             }
 
-            let uniqueElId = transformHelper.nextUniqueId();
-            let idVarName = '__widgetId' + uniqueElId;
-            let idVar = builder.identifier(idVarName);
+            var uniqueElId = transformHelper.nextUniqueId();
+            var idVarName = '__widgetId' + uniqueElId;
+            var idVar = builder.identifier(idVarName);
 
             this.idVarNode = builder.vars([
                 {

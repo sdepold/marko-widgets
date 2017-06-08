@@ -82,7 +82,7 @@ function addDirectEventListener(transformHelper, eventType, targetMethod) {
             transformHelper.getNestedIdExpression()
         ]);
 
-    el.onBeforeGenerateCode((event) => {
+    el.onBeforeGenerateCode(function (event) {
         event.insertCode(addDomEventFunctionCall);
     });
 
@@ -110,7 +110,7 @@ module.exports = function handleWidgetEvents() {
     if (hasWidgetEvents) {
         var attrs = el.getAttributes().concat([]);
 
-        attrs.forEach((attr) => {
+        attrs.forEach(function (attr) {
             var attrName = attr.name;
             if (!attrName || !attrName.startsWith('w-on')) {
                 return;
@@ -173,7 +173,7 @@ module.exports = function handleWidgetEvents() {
                     addDirectEventListener(this, eventType, targetMethod);
                 }
             }
-        });
+        }.bind(this));
 
     }
 };

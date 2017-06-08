@@ -62,7 +62,7 @@ module.exports = function handleWidgetBind() {
     }
 
     if (modulePath) {
-        let widgetTypeNode = context.addStaticVar('__widgetType', this.buildWidgetTypeNode(modulePath));
+        var widgetTypeNode = context.addStaticVar('__widgetType', this.buildWidgetTypeNode(modulePath));
         widgetAttrs.type = widgetTypeNode;
     }
 

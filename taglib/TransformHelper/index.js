@@ -22,89 +22,87 @@ var WidgetArgs = require('./WidgetArgs');
 var getRequirePath = require('../getRequirePath');
 var buildWidgetTypeNode = require('../util/buildWidgetTypeNode');
 
-class TransformHelper {
-    constructor(el, context) {
-        this.el = el;
-        this.context = context;
-        this.builder = context.builder;
-        this.dirname = context.dirname;
+var TransformHelper = function (el, context) {
+    this.el = el;
+    this.context = context;
+    this.builder = context.builder;
+    this.dirname = context.dirname;
 
-        this.widgetNextElId = 0;
-        this.widgetIdInfo = undefined;
-        this.widgetArgs = undefined;
-        this.containingWidgetNode = undefined;
-        this._markoWidgetsVar = undefined;
-        this.widgetStack = context.data.widgetStack || (context.data.widgetStack = []);
+    this.widgetNextElId = 0;
+    this.widgetIdInfo = undefined;
+    this.widgetArgs = undefined;
+    this.containingWidgetNode = undefined;
+    this._markoWidgetsVar = undefined;
+    this.widgetStack = context.data.widgetStack || (context.data.widgetStack = []);
+};
+
+TransformHelper.prototype.addError = function (message, code) {
+    this.context.addError(this.el, message, code);
+};
+
+TransformHelper.prototype.getWidgetArgs = function () {
+    return this.widgetArgs || (this.widgetArgs = new WidgetArgs());
+};
+
+TransformHelper.prototype.nextUniqueId = function () {
+    var widgetNextElId = this.context.data.widgetNextElId;
+    if (widgetNextElId == null) {
+        this.context.data.widgetNextElId = 0;
     }
 
-    addError(message, code) {
-        this.context.addError(this.el, message, code);
+    return (this.context.data.widgetNextElId++);
+};
+
+TransformHelper.prototype.getNestedIdExpression = function () {
+    this.assignWidgetId();
+    return this.getWidgetIdInfo().nestedIdExpression;
+};
+
+TransformHelper.prototype.getIdExpression = function () {
+    this.assignWidgetId();
+    return this.getWidgetIdInfo().idExpression;
+};
+
+TransformHelper.prototype.getWidgetIdInfo = function () {
+    return this.widgetIdInfo;
+};
+
+TransformHelper.prototype.getDefaultWidgetModule = function () {
+    var dirname = this.dirname;
+    if (fs.existsSync(nodePath.join(dirname, 'widget.js'))) {
+        return './widget';
+    } else if (fs.existsSync(nodePath.join(dirname, 'index.js'))) {
+        return './';
+    } else {
+        return null;
+    }
+};
+
+TransformHelper.prototype.getMarkoWidgetsRequirePath = function (target) {
+    return getRequirePath(target, this.context);
+};
+
+TransformHelper.prototype.markoWidgetsVar = function () {
+    if (!this._markoWidgetsVar) {
+        this._markoWidgetsVar = this.context.importModule('__markoWidgets', this.getMarkoWidgetsRequirePath('marko-widgets'));
     }
 
-    getWidgetArgs() {
-        return this.widgetArgs || (this.widgetArgs = new WidgetArgs());
-    }
+    return this._markoWidgetsVar;
+};
 
-    nextUniqueId() {
-        var widgetNextElId = this.context.data.widgetNextElId;
-        if (widgetNextElId == null) {
-            this.context.data.widgetNextElId = 0;
-        }
+TransformHelper.prototype.buildWidgetElIdFunctionCall = function (id) {
+    var builder = this.builder;
 
-        return (this.context.data.widgetNextElId++);
-    }
+    var widgetElId = builder.memberExpression(
+        builder.identifier('widget'),
+        builder.identifier('elId'));
 
-    getNestedIdExpression() {
-        this.assignWidgetId();
-        return this.getWidgetIdInfo().nestedIdExpression;
-    }
+    return builder.functionCall(widgetElId, arguments.length === 0 ? [] : [ id ]);
+};
 
-    getIdExpression() {
-        this.assignWidgetId();
-        return this.getWidgetIdInfo().idExpression;
-    }
-
-    getWidgetIdInfo() {
-        return this.widgetIdInfo;
-    }
-
-    getDefaultWidgetModule() {
-        var dirname = this.dirname;
-        if (fs.existsSync(nodePath.join(dirname, 'widget.js'))) {
-            return './widget';
-        } else if (fs.existsSync(nodePath.join(dirname, 'index.js'))) {
-            return './';
-        } else {
-            return null;
-        }
-    }
-
-    getMarkoWidgetsRequirePath(target) {
-        return getRequirePath(target, this.context);
-    }
-
-    get markoWidgetsVar() {
-        if (!this._markoWidgetsVar) {
-            this._markoWidgetsVar = this.context.importModule('__markoWidgets', this.getMarkoWidgetsRequirePath('marko-widgets'));
-        }
-
-        return this._markoWidgetsVar;
-    }
-
-    buildWidgetElIdFunctionCall(id) {
-        var builder = this.builder;
-
-        var widgetElId = builder.memberExpression(
-            builder.identifier('widget'),
-            builder.identifier('elId'));
-
-        return builder.functionCall(widgetElId, arguments.length === 0 ? [] : [ id ]);
-    }
-
-    buildWidgetTypeNode(path) {
-        return buildWidgetTypeNode(path, this.dirname, this.builder);
-    }
-}
+TransformHelper.prototype.buildWidgetTypeNode = function (path) {
+    return buildWidgetTypeNode(path, this.dirname, this.builder);
+};
 
 TransformHelper.prototype.assignWidgetId = require('./assignWidgetId');
 TransformHelper.prototype.getContainingWidgetNode = require('./getContainingWidgetNode');

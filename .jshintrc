@@ -1,7 +1,7 @@
 {
     "node": true,
     "browser": true,
-    "esnext": true,
+    "esnext": false,
     "boss": false,
     "curly": false,
     "debug": false,

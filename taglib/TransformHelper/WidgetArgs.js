@@ -17,127 +17,124 @@
 
 var getRequirePath = require('../getRequirePath');
 
-class WidgetArgs {
+var WidgetArgs = function () {
+    this.id = null;
+    this.customEvents = null;
+    this.extend = null;
+    this.extendConfig = null;
+    this.extendState = null;
 
-    constructor() {
-        this.id = null;
-        this.customEvents = null;
-        this.extend = null;
-        this.extendConfig = null;
-        this.extendState = null;
+    this.empty = true;
+};
 
-        this.empty = true;
+WidgetArgs.prototype.etId = function (id) {
+    this.empty = false;
+
+    this.id = id;
+};
+
+WidgetArgs.prototype.getId = function () {
+    return this.id;
+};
+
+WidgetArgs.prototype.addCustomEvent = function (eventType, targetMethod) {
+    this.empty = false;
+
+    if (!this.customEvents) {
+        this.customEvents = [];
     }
 
-    setId(id) {
-        this.empty = false;
+    this.customEvents.push(eventType);
+    this.customEvents.push(targetMethod);
+};
 
-        this.id = id;
+WidgetArgs.prototype.etExtend = function (extendType, extendConfig, extendState) {
+    this.empty = false;
+
+    this.extend = extendType;
+    this.extendConfig = extendConfig;
+    this.extendState = extendState;
+};
+
+WidgetArgs.prototype.compile = function (transformHelper) {
+    if (this.empty) {
+        return;
     }
 
-    getId() {
-        return this.id;
+    var el = transformHelper.el;
+
+    var widgetArgsFunctionCall = this.buildWidgetArgsFunctionCall(transformHelper);
+    var cleanupWidgetArgsFunctionCall = this.buildCleanupWidgetArgsFunctionCall(transformHelper);
+
+    el.onBeforeGenerateCode(function (event) {
+        event.insertCode(widgetArgsFunctionCall);
+    });
+
+    el.onAfterGenerateCode(function (event) {
+        event.insertCode(cleanupWidgetArgsFunctionCall);
+    });
+};
+
+WidgetArgs.prototype.buildWidgetArgsFunctionCall = function (transformHelper) {
+    var context = transformHelper.context;
+    var builder = transformHelper.builder;
+
+    var id = this.id;
+    var customEvents = this.customEvents;
+    var extend = this.extend;
+    var extendConfig = this.extendConfig;
+    var extendState = this.extendState;
+
+    // Make sure the nested widget has access to the ID of the containing
+    // widget if it is needed
+    var shouldProvideScope = id || customEvents;
+
+    var widgetArgsVar = context.addStaticVar('__widgetArgs',
+        'require("' + getRequirePath('marko-widgets/taglib/helpers/widgetArgs', context) + '")');
+
+    var functionCallArgs = [
+        builder.identifier('out')
+    ];
+
+    if (shouldProvideScope) {
+        functionCallArgs.push(builder.memberExpression(
+            builder.identifier('widget'),
+            builder.identifier('id')
+        ));
+    } else {
+        functionCallArgs.push(builder.literalNull());
     }
 
-    addCustomEvent(eventType, targetMethod) {
-        this.empty = false;
-
-        if (!this.customEvents) {
-            this.customEvents = [];
-        }
-
-        this.customEvents.push(eventType);
-        this.customEvents.push(targetMethod);
+    if (id != null) {
+        functionCallArgs.push(id);
+    } else {
+        functionCallArgs.push(builder.literalNull());
     }
 
-    setExtend(extendType, extendConfig, extendState) {
-        this.empty = false;
-
-        this.extend = extendType;
-        this.extendConfig = extendConfig;
-        this.extendState = extendState;
+    if (customEvents) {
+        functionCallArgs.push(builder.literal(customEvents));
     }
 
-    compile(transformHelper) {
-        if (this.empty) {
-            return;
-        }
-
-        var el = transformHelper.el;
-
-        let widgetArgsFunctionCall = this.buildWidgetArgsFunctionCall(transformHelper);
-        let cleanupWidgetArgsFunctionCall = this.buildCleanupWidgetArgsFunctionCall(transformHelper);
-
-        el.onBeforeGenerateCode((event) => {
-            event.insertCode(widgetArgsFunctionCall);
-        });
-
-        el.onAfterGenerateCode((event) => {
-            event.insertCode(cleanupWidgetArgsFunctionCall);
-        });
-    }
-
-    buildWidgetArgsFunctionCall(transformHelper) {
-        var context = transformHelper.context;
-        var builder = transformHelper.builder;
-
-        var id = this.id;
-        var customEvents = this.customEvents;
-        var extend = this.extend;
-        var extendConfig = this.extendConfig;
-        var extendState = this.extendState;
-
-        // Make sure the nested widget has access to the ID of the containing
-        // widget if it is needed
-        var shouldProvideScope = id || customEvents;
-
-        let widgetArgsVar = context.addStaticVar('__widgetArgs',
-            'require("' + getRequirePath('marko-widgets/taglib/helpers/widgetArgs', context) + '")');
-
-        var functionCallArgs = [
-            builder.identifier('out')
-        ];
-
-        if (shouldProvideScope) {
-            functionCallArgs.push(builder.memberExpression(
-                builder.identifier('widget'),
-                builder.identifier('id')
-            ));
-        } else {
+    if (extend) {
+        if (!customEvents) {
             functionCallArgs.push(builder.literalNull());
         }
 
-        if (id != null) {
-            functionCallArgs.push(id);
-        } else {
-            functionCallArgs.push(builder.literalNull());
-        }
-
-        if (customEvents) {
-            functionCallArgs.push(builder.literal(customEvents));
-        }
-
-        if (extend) {
-            if (!customEvents) {
-                functionCallArgs.push(builder.literalNull());
-            }
-
-            functionCallArgs.push(extend);
-            functionCallArgs.push(extendConfig || builder.literalNull());
-            functionCallArgs.push(extendState || builder.literalNull());
-        }
-        return builder.functionCall(widgetArgsVar, functionCallArgs);
+        functionCallArgs.push(extend);
+        functionCallArgs.push(extendConfig || builder.literalNull());
+        functionCallArgs.push(extendState || builder.literalNull());
     }
+    return builder.functionCall(widgetArgsVar, functionCallArgs);
+};
 
-    buildCleanupWidgetArgsFunctionCall(transformHelper) {
-        var context = transformHelper.context;
-        var builder = transformHelper.builder;
+WidgetArgs.prototype.buildCleanupWidgetArgsFunctionCall = function (transformHelper) {
+    var context = transformHelper.context;
+    var builder = transformHelper.builder;
 
-        var cleanupWidgetArgsVar = context.addStaticVar('_cleanupWidgetArgs',
-            '__widgetArgs.cleanup');
+    var cleanupWidgetArgsVar = context.addStaticVar('_cleanupWidgetArgs',
+        '__widgetArgs.cleanup');
 
-        return builder.functionCall(cleanupWidgetArgsVar, [builder.identifierOut()]);
-    }
-}
+    return builder.functionCall(cleanupWidgetArgsVar, [builder.identifierOut()]);
+};
 
 module.exports = WidgetArgs;
